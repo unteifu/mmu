@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import { auth } from "~/server/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Navbar from "./_components/Navbar";
 
 export const metadata: Metadata = {
   title: "Money Tracker",
@@ -33,9 +34,15 @@ export default async function RootLayout({
     redirect(url);
   }
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} h-screen w-full bg-neutral-100 text-neutral-700`}
+    >
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <Navbar />
+          {children}
+        </TRPCReactProvider>
       </body>
     </html>
   );
