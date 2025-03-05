@@ -1,16 +1,16 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
-
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { users } from "~/server/db/schema";
+import { transactions, users } from "~/server/db/schema";
 
 export const portfolioRouter = createTRPCRouter({
-  getPorfolio: protectedProcedure
+  getPortfolio: protectedProcedure
     .output(
       z.object({
         currency: z.string(),
         totalValue: z.number(),
+        percentageChange: z.number().nullable(),
       }),
     )
     .query(async ({ ctx }) => {
@@ -25,9 +25,41 @@ export const portfolioRouter = createTRPCRouter({
         });
       }
 
+      const todayStart = new Date();
+      todayStart.setUTCHours(0, 0, 0, 0);
+
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+      const yesterdayEnd = new Date(todayStart);
+      yesterdayEnd.setMilliseconds(yesterdayEnd.getMilliseconds() - 1);
+
+      const yesterdayTransactions = await ctx.db.query.transactions.findMany({
+        where: and(
+          eq(transactions.userId, ctx.user.id),
+          sql`${transactions.createdAt} <= ${yesterdayEnd.toISOString()}`,
+        ),
+        orderBy: [desc(transactions.createdAt)],
+      });
+
+      const yesterdayBalance = yesterdayTransactions.reduce((sum, tx) => {
+        return tx.type === "INCOME" ? sum + tx.amount : sum - tx.amount;
+      }, 0);
+
+      let percentageChange = null;
+      if (yesterdayBalance !== 0) {
+        percentageChange =
+          ((portfolio.portfolioValue - yesterdayBalance) /
+            Math.abs(yesterdayBalance)) *
+          100;
+      }
+
       return {
         currency: portfolio.defaultCurrency,
         totalValue: portfolio.portfolioValue,
+        percentageChange: percentageChange
+          ? Number(percentageChange.toFixed(2))
+          : null,
       };
     }),
   addIncome: protectedProcedure
@@ -50,13 +82,24 @@ export const portfolioRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db
-        .update(users)
-        .set({
-          portfolioValue: user.portfolioValue + amount,
-        })
-        .where(eq(users.id, ctx.user.id));
+      const newBalance = user.portfolioValue + amount;
 
-      return { success: true, newBalance: user.portfolioValue + amount };
+      await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(users)
+          .set({
+            portfolioValue: newBalance,
+          })
+          .where(eq(users.id, ctx.user.id));
+
+        await tx.insert(transactions).values({
+          userId: user.id,
+          amount,
+          currency: user.defaultCurrency,
+          type: "INCOME",
+        });
+      });
+
+      return { success: true, newBalance };
     }),
 });

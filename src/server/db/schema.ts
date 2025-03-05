@@ -135,3 +135,27 @@ export const sessions = createTable(
 export const sessionRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
+
+export const transactionType = pgEnum("transaction_type", [
+  "INCOME",
+  "EXPENSE",
+]);
+export const transactions = createTable(
+  "transactions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    currency: supportedCurrency("currency").notNull(),
+    type: transactionType("type").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (transaction) => ({
+    userIdIndex: index("transactions_user_id_idx").on(transaction.userId),
+  }),
+);

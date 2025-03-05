@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { users } from "~/server/db/schema";
+import { transactions, users } from "~/server/db/schema";
 
 export const expensesRouter = createTRPCRouter({
   addExpense: protectedProcedure
@@ -26,12 +26,21 @@ export const expensesRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db
-        .update(users)
-        .set({
-          portfolioValue: user.portfolioValue - amount,
-        })
-        .where(eq(users.id, ctx.user.id));
+      await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(users)
+          .set({
+            portfolioValue: user.portfolioValue - amount,
+          })
+          .where(eq(users.id, ctx.user.id));
+
+        await tx.insert(transactions).values({
+          userId: user.id,
+          amount,
+          currency: user.defaultCurrency,
+          type: "EXPENSE",
+        });
+      });
 
       return { success: true, newBalance: user.portfolioValue - amount };
     }),

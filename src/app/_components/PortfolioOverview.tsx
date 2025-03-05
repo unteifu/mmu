@@ -4,20 +4,25 @@ import { api } from "~/trpc/react";
 import currency from "currency.js";
 import classNames from "classnames";
 import { motion, AnimatePresence } from "framer-motion";
+import _ from "lodash";
 
-const ValueChange = ({ value }: { value: number }) => {
+const ValueChange = ({ value }: { value: number | null }) => {
   return (
     <div
       className={classNames("flex items-center rounded-lg px-2 py-1", {
-        "bg-green-100 text-green-500": value > 0,
-        "bg-red-100 text-red-500": value < 0,
-        "bg-neutral-100 text-neutral-500": value === 0,
+        "bg-green-100 text-green-500": !_.isNull(value) && value > 0,
+        "bg-red-100 text-red-500": !_.isNull(value) && value < 0,
+        "bg-neutral-100 text-neutral-500": _.isNull(value) || value === 0,
       })}
     >
-      <span className="text-xs font-semibold">
-        {value > 0 ? "+" : ""}
-        {value}%
-      </span>
+      {_.isNull(value) ? (
+        <span className="text-xs font-semibold">-%</span>
+      ) : (
+        <span className="text-xs font-semibold">
+          {value > 0 ? "+" : ""}
+          {value}%
+        </span>
+      )}
     </div>
   );
 };
@@ -70,7 +75,7 @@ const DigitTransition = ({
 };
 
 export default function PortfolioOverview() {
-  const [portfolio] = api.portfolio.getPorfolio.useSuspenseQuery();
+  const [portfolio] = api.portfolio.getPortfolio.useSuspenseQuery();
   const [direction, setDirection] = useState<
     "increasing" | "decreasing" | null
   >(null);
@@ -114,7 +119,7 @@ export default function PortfolioOverview() {
 
   return (
     <div className="mt-5">
-      <h2 className="font-medium text-neutral-500">Total Portfolio Value</h2>
+      <h2 className="font-medium text-neutral-500">Total Balance</h2>
       <div className="mt-2 flex items-center gap-2">
         <div className="flex items-center">
           <div className="-mx-0.5 flex">
@@ -166,7 +171,7 @@ export default function PortfolioOverview() {
             })}
           </div>
         </div>
-        <ValueChange value={2.5} />
+        <ValueChange value={portfolio.percentageChange} />
       </div>
     </div>
   );

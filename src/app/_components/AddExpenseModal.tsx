@@ -37,6 +37,7 @@ export default NiceModal.create(() => {
   const addExpense = api.expenses.addExpense.useMutation({
     onSuccess: async () => {
       await utils.portfolio.invalidate();
+      await utils.transactions.invalidate();
       toast.custom(
         (t) => (
           <AnimatePresence>
