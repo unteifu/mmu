@@ -11,7 +11,7 @@ export default async function Home() {
   });
 
   if (session?.user) {
-    void api.portfolio.getPorfolio.prefetch();
+    void api.portfolio.getPortfolio.prefetch();
     void api.transactions.getTransactions.prefetch();
   }
 

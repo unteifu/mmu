@@ -56,6 +56,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      moment:
+        specifier: ^2.30.1
+        version: 2.30.1
       next:
         specifier: ^15.0.1
         version: 15.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2507,6 +2510,9 @@ packages:
   minipass@7.1.2:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
+
+  moment@2.30.1:
+    resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
   motion-dom@12.4.10:
     resolution: {integrity: sha512-ISP5u6FTceoD6qKdLupIPU/LyXBrxGox+P2e3mBbm1+pLdlBbwv01YENJr7+1WZnW5ucVKzFScYsV1eXTCG4Xg==}
@@ -5663,6 +5669,8 @@ snapshots:
   minimist@1.2.8: {}
 
   minipass@7.1.2: {}
+
+  moment@2.30.1: {}
 
   motion-dom@12.4.10:
     dependencies:
