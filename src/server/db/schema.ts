@@ -3,8 +3,10 @@
 
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   index,
+  pgEnum,
   pgTableCreator,
   timestamp,
   uuid,
@@ -19,6 +21,7 @@ import {
  */
 export const createTable = pgTableCreator((name) => `mmu_${name}`);
 
+export const supportedCurrency = pgEnum("supported_currency", ["GBP"]);
 export const users = createTable(
   "users",
   {
@@ -27,6 +30,14 @@ export const users = createTable(
     email: varchar("email", { length: 256 }),
     emailVerified: boolean("email_verified").default(false),
     image: varchar("image", { length: 256 }),
+    portfolioValue: bigint("portfolio_value", {
+      mode: "number",
+    })
+      .default(0)
+      .notNull(),
+    defaultCurrency: supportedCurrency("default_currency")
+      .default("GBP")
+      .notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
