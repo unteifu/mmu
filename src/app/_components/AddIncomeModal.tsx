@@ -88,10 +88,17 @@ export default NiceModal.create(() => {
     handleSubmit,
     watch,
     setValue,
+    trigger,
     formState: { isValid, isSubmitting },
-  } = useForm({
+  } = useForm<Schema>({
     resolver: zodResolver(schema),
+    mode: "onChange", // Validate on every change
+    defaultValues: {
+      amount: undefined,
+      category: undefined,
+    },
   });
+
   const selectedCategory = watch("category");
   const utils = api.useUtils();
   const addIncome = api.portfolio.addIncome.useMutation({
@@ -140,6 +147,11 @@ export default NiceModal.create(() => {
         modal.remove();
       }, 100);
     }
+  };
+
+  const handleCategorySelect = (category: Schema["category"]) => {
+    setValue("category", category, { shouldValidate: true });
+    void trigger();
   };
 
   return (
@@ -195,7 +207,7 @@ export default NiceModal.create(() => {
                               ? "bg-blue-200 text-neutral-700"
                               : "bg-neutral-100 text-neutral-700",
                           )}
-                          onClick={() => setValue("category", category)}
+                          onClick={() => handleCategorySelect(category)}
                           type="button"
                         >
                           <Badge type={category} />
@@ -220,18 +232,14 @@ export default NiceModal.create(() => {
                         autoFocus
                         onInput={(e) => {
                           let value = e.currentTarget.value;
-
                           value = value.replace(/[^0-9.]/g, "");
-
                           const parts = value.split(".");
                           if (parts.length > 2) {
                             value = parts[0] + "." + parts.slice(1).join("");
                           }
-
                           if (parts[1] && parts[1].length > 2) {
                             value = parts[0] + "." + parts[1].substring(0, 2);
                           }
-
                           e.currentTarget.value = value;
                         }}
                       />
