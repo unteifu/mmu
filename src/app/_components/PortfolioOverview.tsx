@@ -81,7 +81,7 @@ export default function PortfolioOverview() {
   >(null);
   const prevPortfolioRef = useRef<number | null>(null);
   const [initialRender, setInitialRender] = useState(true);
-
+  console.log(portfolio);
   const totalValue = portfolio.totalValue;
 
   const isNegative = totalValue < 0;

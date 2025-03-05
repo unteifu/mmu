@@ -3,13 +3,22 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { transactions, users } from "~/server/db/schema";
+import { expenses, users } from "~/server/db/schema";
 
 export const expensesRouter = createTRPCRouter({
   addExpense: protectedProcedure
     .input(
       z.object({
         amount: z.number().positive().int(),
+        category: z.enum([
+          "FOOD",
+          "TRANSPORT",
+          "SHOPPING",
+          "BILLS",
+          "ENTERTAINMENT",
+          "HEALTH",
+          "OTHER",
+        ]),
       }),
     )
     .output(z.object({ success: z.boolean(), newBalance: z.number() }))
@@ -34,11 +43,11 @@ export const expensesRouter = createTRPCRouter({
           })
           .where(eq(users.id, ctx.user.id));
 
-        await tx.insert(transactions).values({
+        await tx.insert(expenses).values({
           userId: user.id,
           amount,
           currency: user.defaultCurrency,
-          type: "EXPENSE",
+          category: input.category,
         });
       });
 

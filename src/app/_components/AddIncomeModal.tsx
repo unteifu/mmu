@@ -1,5 +1,13 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { IconCircleCheck, IconX } from "@tabler/icons-react";
+import {
+  IconCircleCheck,
+  IconCircles,
+  IconGift,
+  IconMoneybag,
+  IconTimeline,
+  IconUser,
+  IconX,
+} from "@tabler/icons-react";
 import { Dialog } from "radix-ui";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,18 +29,70 @@ const schema = z.object({
       },
       { message: "Max precision is 2 decimal places" },
     ),
+  category: z.enum(["SALARY", "FREELANCE", "INVESTMENT", "GIFT", "OTHER"]),
 });
 type Schema = z.infer<typeof schema>;
+function Badge({ type }: { type: Schema["category"] }) {
+  const colors = {
+    SALARY: {
+      backgroundColor: "bg-green-200",
+      textColor: "text-green-700",
+      icon: <IconMoneybag size={20} stroke={2.5} />,
+    },
+    FREELANCE: {
+      backgroundColor: "bg-cyan-200",
+      textColor: "text-cyan-700",
+      icon: <IconUser size={20} stroke={2.5} />,
+    },
+    INVESTMENT: {
+      backgroundColor: "bg-purple-200",
+      textColor: "text-purple-700",
+      icon: <IconTimeline size={20} stroke={2.5} />,
+    },
+    GIFT: {
+      backgroundColor: "bg-yellow-200",
+      textColor: "text-yellow-700",
+      icon: <IconGift size={20} stroke={2.5} />,
+    },
+    OTHER: {
+      backgroundColor: "bg-neutral-200",
+      textColor: "text-neutral-700",
+      icon: <IconCircles size={20} stroke={2.5} />,
+    },
+  };
+
+  return (
+    <div
+      className={classNames(
+        "flex aspect-square items-center justify-center rounded-full p-1.5",
+        colors[type].backgroundColor,
+        colors[type].textColor,
+      )}
+    >
+      {colors[type].icon}
+    </div>
+  );
+}
 
 export default NiceModal.create(() => {
   const modal = useModal();
+  const categories: Schema["category"][] = [
+    "SALARY",
+    "FREELANCE",
+    "INVESTMENT",
+    "GIFT",
+    "OTHER",
+  ];
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { isValid, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
   });
+  const selectedCategory = watch("category");
   const utils = api.useUtils();
   const addIncome = api.portfolio.addIncome.useMutation({
     onSuccess: async () => {
@@ -125,6 +185,26 @@ export default NiceModal.create(() => {
                     onSubmit={handleSubmit(onSubmit)}
                     className="mt-8 flex flex-col gap-4"
                   >
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {categories.map((category) => (
+                        <button
+                          key={category}
+                          className={classNames(
+                            "flex items-center gap-2 rounded-xl p-2 transition-colors",
+                            selectedCategory === category
+                              ? "bg-blue-200 text-neutral-700"
+                              : "bg-neutral-100 text-neutral-700",
+                          )}
+                          onClick={() => setValue("category", category)}
+                          type="button"
+                        >
+                          <Badge type={category} />
+                          <span className="text-sm font-semibold">
+                            {category.toLowerCase()}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">
                         £
@@ -159,10 +239,9 @@ export default NiceModal.create(() => {
                     <button
                       className={classNames(
                         "w-full rounded-xl py-2 transition-colors",
-                        {
-                          "bg-blue-500 hover:bg-blue-600": isValid,
-                          "bg-blue-200": !isValid,
-                        },
+                        isValid
+                          ? "bg-blue-500 hover:bg-blue-600"
+                          : "bg-blue-200",
                       )}
                       type="submit"
                       disabled={!isValid}

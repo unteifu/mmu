@@ -1,5 +1,15 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { IconCircleCheck, IconX } from "@tabler/icons-react";
+import {
+  IconCar,
+  IconCircleCheck,
+  IconCircles,
+  IconHeart,
+  IconInvoice,
+  IconMovie,
+  IconShoppingBag,
+  IconSoup,
+  IconX,
+} from "@tabler/icons-react";
 import { Dialog } from "radix-ui";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,18 +31,92 @@ const schema = z.object({
       },
       { message: "Max precision is 2 decimal places" },
     ),
+  category: z.enum([
+    "FOOD",
+    "TRANSPORT",
+    "SHOPPING",
+    "BILLS",
+    "ENTERTAINMENT",
+    "HEALTH",
+    "OTHER",
+  ]),
 });
 type Schema = z.infer<typeof schema>;
 
+function Badge({ type }: { type: Schema["category"] }) {
+  const colors = {
+    FOOD: {
+      backgroundColor: "bg-red-200",
+      textColor: "text-red-700",
+      icon: <IconSoup size={20} stroke={2.5} />,
+    },
+    TRANSPORT: {
+      backgroundColor: "bg-cyan-200",
+      textColor: "text-cyan-700",
+      icon: <IconCar size={20} stroke={2.5} />,
+    },
+    SHOPPING: {
+      backgroundColor: "bg-yellow-200",
+      textColor: "text-yellow-700",
+      icon: <IconShoppingBag size={20} stroke={2.5} />,
+    },
+    BILLS: {
+      backgroundColor: "bg-green-200",
+      textColor: "text-green-700",
+      icon: <IconInvoice size={20} stroke={2.5} />,
+    },
+    ENTERTAINMENT: {
+      backgroundColor: "bg-purple-200",
+      textColor: "text-purple-700",
+      icon: <IconMovie size={20} stroke={2.5} />,
+    },
+    HEALTH: {
+      backgroundColor: "bg-pink-200",
+      textColor: "text-pink-700",
+      icon: <IconHeart size={20} stroke={2.5} />,
+    },
+    OTHER: {
+      backgroundColor: "bg-gray-200",
+      textColor: "text-gray-700",
+      icon: <IconCircles size={20} stroke={2.5} />,
+    },
+  };
+
+  return (
+    <div
+      className={classNames(
+        "flex aspect-square items-center justify-center rounded-full p-1.5",
+        colors[type].backgroundColor,
+        colors[type].textColor,
+      )}
+    >
+      {colors[type].icon}
+    </div>
+  );
+}
+
 export default NiceModal.create(() => {
   const modal = useModal();
+  const categories: Schema["category"][] = [
+    "FOOD",
+    "TRANSPORT",
+    "SHOPPING",
+    "BILLS",
+    "ENTERTAINMENT",
+    "HEALTH",
+    "OTHER",
+  ];
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { isValid, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
   });
+
+  const selectedCategory = watch("category");
   const utils = api.useUtils();
   const addExpense = api.expenses.addExpense.useMutation({
     onSuccess: async () => {
@@ -125,6 +209,26 @@ export default NiceModal.create(() => {
                     onSubmit={handleSubmit(onSubmit)}
                     className="mt-8 flex flex-col gap-4"
                   >
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {categories.map((category) => (
+                        <button
+                          key={category}
+                          className={classNames(
+                            "flex items-center gap-2 rounded-xl p-2 transition-colors",
+                            selectedCategory === category
+                              ? "bg-blue-200 text-neutral-700"
+                              : "bg-neutral-100 text-neutral-700",
+                          )}
+                          onClick={() => setValue("category", category)}
+                          type="button"
+                        >
+                          <Badge type={category} />
+                          <span className="text-sm font-semibold">
+                            {category.toLowerCase()}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">
                         £
@@ -159,10 +263,9 @@ export default NiceModal.create(() => {
                     <button
                       className={classNames(
                         "w-full rounded-xl py-2 transition-colors",
-                        {
-                          "bg-blue-500 hover:bg-blue-600": isValid,
-                          "bg-blue-200": !isValid,
-                        },
+                        isValid
+                          ? "bg-blue-500 hover:bg-blue-600"
+                          : "bg-blue-200",
                       )}
                       type="submit"
                       disabled={!isValid}

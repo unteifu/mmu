@@ -136,18 +136,32 @@ export const sessionRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
 
-export const transactionType = pgEnum("transaction_type", [
-  "INCOME",
-  "EXPENSE",
+export const expenseCategory = pgEnum("expense_category", [
+  "FOOD",
+  "TRANSPORT",
+  "SHOPPING",
+  "BILLS",
+  "ENTERTAINMENT",
+  "HEALTH",
+  "OTHER",
 ]);
-export const transactions = createTable(
-  "transactions",
+
+export const incomeCategory = pgEnum("income_category", [
+  "SALARY",
+  "FREELANCE",
+  "INVESTMENT",
+  "GIFT",
+  "OTHER",
+]);
+
+export const expenses = createTable(
+  "expenses",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     userId: uuid("user_id").notNull(),
     amount: bigint("amount", { mode: "number" }).notNull(),
     currency: supportedCurrency("currency").notNull(),
-    type: transactionType("type").notNull(),
+    category: expenseCategory("category").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -155,7 +169,27 @@ export const transactions = createTable(
       () => new Date(),
     ),
   },
-  (transaction) => ({
-    userIdIndex: index("transactions_user_id_idx").on(transaction.userId),
+  (expense) => ({
+    userIdIndex: index("expenses_user_id_idx").on(expense.userId),
+  }),
+);
+
+export const incomes = createTable(
+  "incomes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    currency: supportedCurrency("currency").notNull(),
+    category: incomeCategory("category").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (income) => ({
+    userIdIndex: index("incomes_user_id_idx").on(income.userId),
   }),
 );

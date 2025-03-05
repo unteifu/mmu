@@ -22,7 +22,7 @@ export default async function Home() {
           <Greeting />
           <PortfolioOverview />
         </div>
-        <div className="mb-20 w-full rounded-xl bg-white p-10">
+        <div className="mb-32 w-full rounded-xl bg-white p-10 sm:mb-20">
           <TransactionHistory />
         </div>
       </div>

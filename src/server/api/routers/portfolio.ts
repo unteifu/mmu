@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { transactions, users } from "~/server/db/schema";
+import { incomes, expenses, users } from "~/server/db/schema";
 
 export const portfolioRouter = createTRPCRouter({
   getPortfolio: protectedProcedure
@@ -34,17 +34,31 @@ export const portfolioRouter = createTRPCRouter({
       const yesterdayEnd = new Date(todayStart);
       yesterdayEnd.setMilliseconds(yesterdayEnd.getMilliseconds() - 1);
 
-      const yesterdayTransactions = await ctx.db.query.transactions.findMany({
+      const yesterdayIncomes = await ctx.db.query.incomes.findMany({
         where: and(
-          eq(transactions.userId, ctx.user.id),
-          sql`${transactions.createdAt} <= ${yesterdayEnd.toISOString()}`,
+          eq(incomes.userId, ctx.user.id),
+          sql`${incomes.createdAt} <= ${yesterdayEnd.toISOString()}`,
         ),
-        orderBy: [desc(transactions.createdAt)],
+        orderBy: [desc(incomes.createdAt)],
       });
 
-      const yesterdayBalance = yesterdayTransactions.reduce((sum, tx) => {
-        return tx.type === "INCOME" ? sum + tx.amount : sum - tx.amount;
-      }, 0);
+      const yesterdayExpenses = await ctx.db.query.expenses.findMany({
+        where: and(
+          eq(expenses.userId, ctx.user.id),
+          sql`${expenses.createdAt} <= ${yesterdayEnd.toISOString()}`,
+        ),
+        orderBy: [desc(expenses.createdAt)],
+      });
+
+      const yesterdayIncomeTotal = yesterdayIncomes.reduce(
+        (sum, tx) => sum + tx.amount,
+        0,
+      );
+      const yesterdayExpenseTotal = yesterdayExpenses.reduce(
+        (sum, tx) => sum + tx.amount,
+        0,
+      );
+      const yesterdayBalance = yesterdayIncomeTotal - yesterdayExpenseTotal;
 
       let percentageChange = null;
       if (yesterdayBalance !== 0) {
@@ -66,6 +80,13 @@ export const portfolioRouter = createTRPCRouter({
     .input(
       z.object({
         amount: z.number().positive().int(),
+        category: z.enum([
+          "SALARY",
+          "FREELANCE",
+          "INVESTMENT",
+          "GIFT",
+          "OTHER",
+        ]),
       }),
     )
     .output(z.object({ success: z.boolean(), newBalance: z.number() }))
@@ -92,11 +113,11 @@ export const portfolioRouter = createTRPCRouter({
           })
           .where(eq(users.id, ctx.user.id));
 
-        await tx.insert(transactions).values({
+        await tx.insert(incomes).values({
           userId: user.id,
           amount,
           currency: user.defaultCurrency,
-          type: "INCOME",
+          category: input.category,
         });
       });
 
