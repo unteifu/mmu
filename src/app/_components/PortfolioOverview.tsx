@@ -78,13 +78,18 @@ export default function PortfolioOverview() {
   const [initialRender, setInitialRender] = useState(true);
 
   const totalValue = portfolio.totalValue;
-  const formattedValue = currency(totalValue, {
+
+  const isNegative = totalValue < 0;
+
+  const formattedValue = currency(Math.abs(totalValue), {
     fromCents: true,
     symbol: "£",
     precision: 2,
   }).format();
 
-  const valueArray = formattedValue.split("");
+  const displayValue = isNegative ? `-${formattedValue}` : formattedValue;
+
+  const valueArray = displayValue.split("");
 
   useEffect(() => {
     if (initialRender) {
@@ -109,20 +114,36 @@ export default function PortfolioOverview() {
 
   return (
     <div className="mt-5">
-      <h2 className="font-medium text-neutral-500">Current Balance</h2>
+      <h2 className="font-medium text-neutral-500">Total Portfolio Value</h2>
       <div className="mt-2 flex items-center gap-2">
         <div className="flex items-center">
-          <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mr-1.5 text-3xl font-bold"
-          >
-            £
-          </motion.span>
           <div className="-mx-0.5 flex">
-            {valueArray.slice(1).map((char, index) => {
-              if (char === "," || char === ".") {
+            {valueArray.map((char, index) => {
+              if (char === "£") {
+                return (
+                  <motion.span
+                    key="currency-symbol"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="mr-0.5 text-3xl font-bold"
+                  >
+                    £
+                  </motion.span>
+                );
+              } else if (char === "-") {
+                return (
+                  <motion.span
+                    key="negative-sign"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="mr-0.5 text-3xl font-bold"
+                  >
+                    -
+                  </motion.span>
+                );
+              } else if (char === "," || char === ".") {
                 return (
                   <DigitTransition
                     key={`special-${index}`}

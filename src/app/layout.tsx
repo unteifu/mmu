@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
+import { Toaster } from "react-hot-toast";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { auth } from "~/server/auth";
@@ -48,6 +49,7 @@ export default async function RootLayout({
               <div className="mx-4 w-full max-w-7xl">{children}</div>
             </main>
             <ActionBar />
+            <Toaster />
           </NiceModalProvider>
         </TRPCReactProvider>
       </body>

@@ -34,7 +34,7 @@ export default NiceModal.create(() => {
     resolver: zodResolver(schema),
   });
   const utils = api.useUtils();
-  const addIncome = api.portfolio.addIncome.useMutation({
+  const addExpense = api.expenses.addExpense.useMutation({
     onSuccess: async () => {
       await utils.portfolio.invalidate();
       toast.custom(
@@ -51,7 +51,7 @@ export default NiceModal.create(() => {
               >
                 <IconCircleCheck size={20} className="text-green-500" />
                 <span className="text-sm font-semibold text-green-500">
-                  Income added successfully
+                  Expense added successfully
                 </span>
               </motion.div>
             )}
@@ -69,7 +69,7 @@ export default NiceModal.create(() => {
   });
 
   const onSubmit: SubmitHandler<Schema> = async (data) => {
-    await addIncome.mutateAsync(data);
+    await addExpense.mutateAsync(data);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -106,7 +106,7 @@ export default NiceModal.create(() => {
                 >
                   <div className="flex w-full justify-between">
                     <Dialog.Title className="text-2xl font-semibold">
-                      Add Income
+                      Add Expense
                     </Dialog.Title>
                     <Dialog.Close asChild>
                       <button
@@ -118,7 +118,7 @@ export default NiceModal.create(() => {
                     </Dialog.Close>
                   </div>
                   <Dialog.Description className="text-sm font-medium text-neutral-500">
-                    Increase your balance by adding income to your account
+                    Add a new expense so you can keep track of your spending
                   </Dialog.Description>
                   <form
                     onSubmit={handleSubmit(onSubmit)}
@@ -171,7 +171,7 @@ export default NiceModal.create(() => {
                           <Spinner size={20} />
                         ) : (
                           <span className="text-sm font-semibold">
-                            Add Income
+                            Add Expense
                           </span>
                         )}
                       </div>
