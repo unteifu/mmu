@@ -8,7 +8,8 @@ import { auth } from "~/server/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Navbar from "./_components/Navbar";
-import NewExpense from "./_components/NewExpense";
+import ActionBar from "./_components/ActionBar";
+import NiceModalProvider from "~/providers/NiceModalProvider";
 
 export const metadata: Metadata = {
   title: "Money Tracker",
@@ -41,11 +42,13 @@ export default async function RootLayout({
     >
       <body>
         <TRPCReactProvider>
-          <Navbar />
-          <main className="mt-10 flex w-full justify-center">
-            <div className="w-full max-w-7xl">{children}</div>
-          </main>
-          <NewExpense />
+          <NiceModalProvider>
+            <Navbar />
+            <main className="mt-10 flex w-full justify-center">
+              <div className="mx-4 w-full max-w-7xl">{children}</div>
+            </main>
+            <ActionBar />
+          </NiceModalProvider>
         </TRPCReactProvider>
       </body>
     </html>
