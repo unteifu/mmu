@@ -3,8 +3,10 @@
 
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   index,
+  pgEnum,
   pgTableCreator,
   timestamp,
   uuid,
@@ -19,6 +21,7 @@ import {
  */
 export const createTable = pgTableCreator((name) => `mmu_${name}`);
 
+export const supportedCurrency = pgEnum("supported_currency", ["GBP"]);
 export const users = createTable(
   "users",
   {
@@ -27,6 +30,14 @@ export const users = createTable(
     email: varchar("email", { length: 256 }),
     emailVerified: boolean("email_verified").default(false),
     image: varchar("image", { length: 256 }),
+    portfolioValue: bigint("portfolio_value", {
+      mode: "number",
+    })
+      .default(0)
+      .notNull(),
+    defaultCurrency: supportedCurrency("default_currency")
+      .default("GBP")
+      .notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -124,3 +135,61 @@ export const sessions = createTable(
 export const sessionRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
+
+export const expenseCategory = pgEnum("expense_category", [
+  "FOOD",
+  "TRANSPORT",
+  "SHOPPING",
+  "BILLS",
+  "ENTERTAINMENT",
+  "HEALTH",
+  "OTHER",
+]);
+
+export const incomeCategory = pgEnum("income_category", [
+  "SALARY",
+  "FREELANCE",
+  "INVESTMENT",
+  "GIFT",
+  "OTHER",
+]);
+
+export const expenses = createTable(
+  "expenses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    currency: supportedCurrency("currency").notNull(),
+    category: expenseCategory("category").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (expense) => ({
+    userIdIndex: index("expenses_user_id_idx").on(expense.userId),
+  }),
+);
+
+export const incomes = createTable(
+  "incomes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    amount: bigint("amount", { mode: "number" }).notNull(),
+    currency: supportedCurrency("currency").notNull(),
+    category: incomeCategory("category").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date(),
+    ),
+  },
+  (income) => ({
+    userIdIndex: index("incomes_user_id_idx").on(income.userId),
+  }),
+);
